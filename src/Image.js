@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Image = ({ dataUri }) => {
+export const Image = ({ dataUri }) => {
   // if no dataUri or dataUri is data empty, use gif blank 1px
   let dataUriImage = (!dataUri || dataUri === "data:,")
     ? "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
@@ -10,12 +10,4 @@ const Image = ({ dataUri }) => {
   );
 }
 
-export const Images = ({ dataUris }) => {
-  return(
-    dataUris.reverse().map((dataUri, index) => {
-      return <Image key={index} dataUri={dataUri}/>
-    })
-  );
-}
-
-export default Images;
+export default Image;

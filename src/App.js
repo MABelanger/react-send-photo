@@ -1,12 +1,13 @@
 import React, { Component } from 'react';
 import Camera from 'react-html5-camera-photo';
 import Request from 'superagent';
-import Images from './Images';
+import Image from './Image';
 import './App.css';
 
 const IMAGE_THUMB_SIZE_FACTOR = 1;
+const POST_REST_URL = 'http://localhost:9002/api/photos';
 
-const Buttons = ({ onStopStreams, onPlayFirstDevice, onGetDataUri, onClearPhotos }) => {
+const Buttons = ({ onStopStreams, onPlayFirstDevice, onGetDataUri }) => {
   return(
     <div>
       <button
@@ -27,11 +28,6 @@ const Buttons = ({ onStopStreams, onPlayFirstDevice, onGetDataUri, onClearPhotos
         }}
       >Stop</button>
 
-      <button
-        onClick={(e) => {
-          onClearPhotos();
-        }}
-      >Clear</button>
     </div>
   );
 }
@@ -41,13 +37,28 @@ class App extends Component {
   constructor(props, context) {
     super(props, context);
     this.state = {
-      dataUris: [],
-      isCameraRunning: false
+      dataUri: "",
+      isCameraRunning: false,
+      isUploading: false,
+      isError: false
     };
   }
 
+
+  setDelayBetweenUpload = (delay) => {
+    this.setState({
+      isDelayBetweenUpload : true
+    });
+    setTimeout (()=>{
+      this.setState({
+        isDelayBetweenUpload : false
+      });
+    }, delay);
+  }
+
   sendPicture = (dataUri) => {
-    let url = "http://localhost:3000/api/photos";
+    let url = POST_REST_URL;
+    this.setDelayBetweenUpload(1000);
     Request
       .post(url, {timeout: 1500})
       .accept('application/json')
@@ -55,11 +66,25 @@ class App extends Component {
       .send({dataUri})
       .end((err, res) => {
           console.log('isPosting');
-        if(! err && res.statusCode == 200){
+          this.setState({
+            isUploading:true
+          });
+        if(! err && res.statusCode === 200){
+          this.setState({
+            isUploading:false
+          });
           console.log('isPosted');
         } else if(res){
+          this.setState({
+            isUploading:false,
+            isError: true
+          });
           console.log('error1');
         } else {
+          this.setState({
+            isUploading:false,
+            isError: true
+          });
           console.log('error2');
         }
       });
@@ -68,7 +93,7 @@ class App extends Component {
   getDataUri = () => {
     let dataUri = this.refs.camera.getDataUri(IMAGE_THUMB_SIZE_FACTOR);
     this.setState({
-      dataUris: this.state.dataUris.concat(dataUri)
+      dataUri
     });
     this.sendPicture(dataUri);
   }
@@ -103,23 +128,47 @@ class App extends Component {
     });
   }
 
+  getShowHideStyle(isDisplay) {
+    let displayStyle = isDisplay
+      ? {display: 'inline-block', width: '200px'}
+      : {display: 'none'}
+
+    return displayStyle;
+  }
+
+
   render() {
 
-  let infoCamera = this.state.isCameraRunning
-    ? <div className="txt-green"> Camera ON </div>
-    : <div className="txt-red"> Camera OFF </div>
+    let infoCamera = this.state.isCameraRunning
+      ? <div className="txt-green"> Camera ON </div>
+      : <div className="txt-red"> Camera OFF </div>
+
+    // if the image is not Uploading show only the camera.
+    // if the image is uploading show only the image.
+    let showHideStyleCamera =
+      this.getShowHideStyle(!(this.state.isUploading || this.state.isDelayBetweenUpload))
+    let showHideStyleImage =
+      this.getShowHideStyle(this.state.isUploading || this.state.isDelayBetweenUpload)
 
     return (
       <div className="App">
 
         <div className="camera">
-          <Camera
-            ref="camera"
-            onCameraError = {this.onCameraError}
-            autoPlay={true}
-            onCameraStart = {this.onCameraStart}
-            onCameraStop = {this.onCameraStop}
-          />
+
+          <div style={showHideStyleCamera}>
+            <Camera
+              ref="camera"
+              onCameraError = {this.onCameraError}
+              onCameraStart = {this.onCameraStart}
+              onCameraStop = {this.onCameraStop}
+            />
+          </div>
+
+          <div style={showHideStyleImage}>
+            <Image
+              dataUri = {this.state.dataUri}
+            />
+          </div>
 
           { infoCamera }
 
@@ -127,13 +176,10 @@ class App extends Component {
             onStopStreams = {()=>{this.refs.camera.stopStreams()}}
             onPlayFirstDevice = {()=>{this.refs.camera.playFirstDevice()}}
             onGetDataUri = {()=>{this.getDataUri()}}
-            onClearPhotos = {()=>{this.onClearPhotos()}}
           />
         </div>
 
-        <Images
-          dataUris = {this.state.dataUris}
-        />
+
       </div>
     );
   }

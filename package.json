@@ -9,10 +9,16 @@
     "react-scripts": "1.1.1",
     "superagent": "^3.8.2"
   },
+  "homepage": "https://mabelanger.github.io/camera/",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "predeployHtml": "npm run build",
+    "deployHtml": "gh-pages -d build"
+  },
+  "devDependencies": {
+    "gh-pages": "^1.1.0"
   }
 }
