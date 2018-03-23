@@ -7,7 +7,7 @@ import './App.css';
 const IMAGE_THUMB_SIZE_FACTOR = 1;
 const POST_REST_URL = 'http://localhost:9002/api/photos';
 
-const Buttons = ({ onStopStreams, onPlayFirstDevice, onGetDataUri }) => {
+const Buttons = ({ onStopStreams, onPlayFirstDevice, onSendPicture }) => {
   return(
     <div>
       <button
@@ -18,9 +18,9 @@ const Buttons = ({ onStopStreams, onPlayFirstDevice, onGetDataUri }) => {
 
       <button
         onClick={(e) => {
-          onGetDataUri();
+          onSendPicture();
         }}
-      >Photo</button>
+      >Send Picture</button>
 
       <button
         onClick={(e) => {
@@ -56,46 +56,53 @@ class App extends Component {
     }, delay);
   }
 
-  sendPicture = (dataUri) => {
-    let url = POST_REST_URL;
-    this.setDelayBetweenUpload(1000);
-    Request
-      .post(url, {timeout: 1500})
-      .accept('application/json')
-      .type('application/json')
-      .send({dataUri})
-      .end((err, res) => {
-          console.log('isPosting');
-          this.setState({
-            isUploading:true
-          });
-        if(! err && res.statusCode === 200){
-          this.setState({
-            isUploading:false
-          });
-          console.log('isPosted');
-        } else if(res){
-          this.setState({
-            isUploading:false,
-            isError: true
-          });
-          console.log('error1');
-        } else {
-          this.setState({
-            isUploading:false,
-            isError: true
-          });
-          console.log('error2');
-        }
+  postPicture = (dataUri, url) => {
+    return new Promise((resolve, reject) => {
+      Request
+        .post(url, {timeout: 1500})
+        .accept('application/json')
+        .type('application/json')
+        .send({dataUri})
+        .end((err, res) => {
+          if(! err && res.statusCode === 200){
+            resolve();
+          } else if(res){
+            reject(res);
+          } else {
+            reject({});
+          }
       });
+    });
   }
 
-  getDataUri = () => {
+  /*
+  this.setState({
+    isUploading:false,
+    isError: true
+  });
+  */
+
+  sendPicture = () => {
+    let url = POST_REST_URL;
     let dataUri = this.refs.camera.getDataUri(IMAGE_THUMB_SIZE_FACTOR);
+
     this.setState({
       dataUri
     });
-    this.sendPicture(dataUri);
+
+    this.setDelayBetweenUpload(1000);
+    this.postPicture(dataUri, url)
+      .then(()=>{
+        this.setState({
+          isUploading:false
+        });
+      })
+      .catch(()=>{
+        this.setState({
+          isUploading:false,
+          isError: true
+        });
+      })
   }
 
   onClearPhotos = () => {
@@ -175,7 +182,9 @@ class App extends Component {
           <Buttons
             onStopStreams = {()=>{this.refs.camera.stopStreams()}}
             onPlayFirstDevice = {()=>{this.refs.camera.playFirstDevice()}}
-            onGetDataUri = {()=>{this.getDataUri()}}
+            onSendPicture = {()=>{
+              this.sendPicture();
+            }}
           />
         </div>
 
