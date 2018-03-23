@@ -1,1 +1,1 @@
-# react-send-photo
+react-html5-camera-photo
