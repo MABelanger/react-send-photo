@@ -34,3 +34,17 @@ video {
 img {
   width: 100%;
 }
+
+button {
+  margin-top: 5px;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+.txt-green {
+  color: green;
+}
+
+.txt-red {
+  color: red;
+}

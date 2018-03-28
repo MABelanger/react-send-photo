@@ -5,22 +5,16 @@ import Image from './Image';
 import './App.css';
 
 const IMAGE_THUMB_SIZE_FACTOR = 1;
-const POST_REST_URL = 'http://localhost:9002/api/photos';
+const POST_REST_URL = '/api/photos';
 
-const Buttons = ({ onStopStreams, onPlayFirstDevice, onSendPicture }) => {
+const Buttons = ({ onStopStreams, onPlayLastDevice, onSendPicture }) => {
   return(
     <div>
       <button
         onClick={(e) => {
-          onPlayFirstDevice();
+          onPlayLastDevice();
         }}
       >Play</button>
-
-      <button
-        onClick={(e) => {
-          onSendPicture();
-        }}
-      >Send Picture</button>
 
       <button
         onClick={(e) => {
@@ -105,12 +99,6 @@ class App extends Component {
       })
   }
 
-  onClearPhotos = () => {
-    this.setState({
-      dataUris: []
-    });
-  }
-
   onCameraError = (error) => {
     let {code, message, name} = error;
     let strError = `
@@ -162,12 +150,16 @@ class App extends Component {
 
         <div className="camera">
 
+        <h4>Click on the video to send the picture</h4>
           <div style={showHideStyleCamera}>
             <Camera
               ref="camera"
               onCameraError = {this.onCameraError}
               onCameraStart = {this.onCameraStart}
               onCameraStop = {this.onCameraStop}
+              onVideoClick = {()=>{
+                this.sendPicture();
+              }}
             />
           </div>
 
@@ -180,8 +172,12 @@ class App extends Component {
           { infoCamera }
 
           <Buttons
-            onStopStreams = {()=>{this.refs.camera.stopStreams()}}
-            onPlayFirstDevice = {()=>{this.refs.camera.playFirstDevice()}}
+            onStopStreams = {()=>{
+              this.refs.camera.stopStreams()
+            }}
+            onPlayLastDevice = {()=>{
+              this.refs.camera.playLastDevice()
+            }}
             onSendPicture = {()=>{
               this.sendPicture();
             }}
